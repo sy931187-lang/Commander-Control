@@ -1,0 +1,2873 @@
+print("[JZ] Commander Control booting... [TROLL LOOP v1]")
+
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local TextChatService = game:GetService("TextChatService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local VirtualUser = game:GetService("VirtualUser")
+local TeleportService = game:GetService("TeleportService")
+local LocalPlayer = Players.LocalPlayer
+local PRIME_INTERVAL = 1.5
+local FOLLOW_UPDATE = 0.10
+local FOLLOW_DISTANCE = 2.5
+local FLING_POWER = 250
+local SelectedCommander = nil
+local PRIMARY_OWNER = "JackZort"
+local CurrentOwner = PRIMARY_OWNER
+local FollowTargets = {}
+local OrbitTargets = {}
+local LoopTPTargets = {}
+local HeadSitTargets = {}
+local FlingTargets = {}
+local NoclipEnabled = false
+local NoSitEnabled = false
+local AntiAFKEnabled = false
+local AntiFlingEnabled = false
+local AntiVoidEnabled = false
+local SpinEnabled = false
+local SpinSpeed = 10
+local SpamRunning = false
+local SpamToken = 0
+local PrimeRunning = false
+local PrimeToken = 0
+local PiggyRunning = false
+local TrollRunning = false
+local TrollToken = 0
+local NoclipConnection = nil
+local NoSitConnection = nil
+local AntiAFKConnection = nil
+local AntiFlingConnection = nil
+local AntiVoidConnection = nil
+local SpinConnection = nil
+local PrimeMessages = {
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX FRAUD VOID GODZILLA HYPER SPELL",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX GODZILLA FRAUD SONIC LVL MAX EDITOR KILLING KING",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX NOVA POWER WAVE PARALLEL SPELL DIMENSION VOID WORM",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX DIMENSION WAVE NOVA POWER PARALLEL",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX ALPHA POWER UNLIMITED DESTROY",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX NOVA POWER WAVE PARALLEL SPELL DIMENSION VOID WORM",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX MAREE GODZILLA WAVE SONIC LVL POWER EDITOR KILLING KING SPAMMER",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX POWER MAX LVL SONIC BEEM FORCE",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX FINAL WARNING SPAMMER ACTIVATED",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX PARALLEL NOVA DIMENSION WAVE POWER FORCE",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX GODLY BEAM HYPER FRAUD VOID WORM ALPHA",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX SONIC WAVE GODZILLA PARALLEL SPELL POWER",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX DARK POWER VOID SPELL GODZILLA WAVE SONIC",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX PARALLEL NOVA DIMENSION WAVE POWER FORCE",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX FINAL WARNING SPAMMER ACTIVATED",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX ULTIMATE GODZILLA + SONIC COMBINED FORCE",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX KILLING KING POWER EDITOR LVL MAX SPAMMER",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX KILLING KING POWER EDITOR LVL MAX SPAMMER",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX SONIC WAVE GODZILLA PARALLEL SPELL POWER",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX FRAUD VOID GODZILLA HYPER SPELL",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX ULTIMATE GODZILLA + SONIC COMBINED FORCE",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET TMX ALPHA POWER UNLIMITED DESTROY",
+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TARGET NightStar V1 ON TOP NEVER LOSING"
+}
+
+-- Parent the interface to PlayerGui for reliable client-side display.
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local ExistingGui = PlayerGui:FindFirstChild("CommanderControl")
+if ExistingGui then
+    ExistingGui:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CommanderControl"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = PlayerGui
+
+print("[JZ] Commander Control GUI created.")
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 760, 0, 520)
+Main.Position = UDim2.new(0.5, -380, 0.5, -260)
+Main.BackgroundColor3 = Color3.fromRGB(16, 16, 18)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = Main
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(65, 65, 70)
+MainStroke.Thickness = 1
+MainStroke.Parent = Main
+
+local function MakeDraggable(Object, Handle)
+local Dragging = false
+local DragStart = nil
+local StartPosition = nil
+
+Handle.InputBegan:Connect(function(Input)
+if Input.UserInputType == Enum.UserInputType.MouseButton1
+or Input.UserInputType == Enum.UserInputType.Touch then
+Dragging = true
+DragStart = Input.Position
+StartPosition = Object.Position
+
+Input.Changed:Connect(function()
+if Input.UserInputState == Enum.UserInputState.End then
+Dragging = false
+end
+end)
+end
+end)
+
+UserInputService.InputChanged:Connect(function(Input)
+if not Dragging then
+return
+end
+
+if Input.UserInputType ~= Enum.UserInputType.MouseMovement
+and Input.UserInputType ~= Enum.UserInputType.Touch then
+return
+end
+
+local Delta = Input.Position - DragStart
+
+Object.Position = UDim2.new(
+StartPosition.X.Scale,
+StartPosition.X.Offset + Delta.X,
+StartPosition.Y.Scale,
+StartPosition.Y.Offset + Delta.Y
+)
+end)
+end
+
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 82)
+TopBar.BackgroundTransparency = 1
+TopBar.Parent = Main
+
+MakeDraggable(Main, TopBar)
+
+local MadeBy = Instance.new("TextLabel")
+MadeBy.Size = UDim2.new(1, -100, 0, 30)
+MadeBy.Position = UDim2.new(0, 18, 0, 8)
+MadeBy.BackgroundTransparency = 1
+MadeBy.Text = "MADE BY JackZort"
+MadeBy.TextColor3 = Color3.fromRGB(220, 220, 225)
+MadeBy.TextSize = 20
+MadeBy.Font = Enum.Font.GothamBlack
+MadeBy.TextXAlignment = Enum.TextXAlignment.Left
+MadeBy.Parent = TopBar
+
+local CommanderLabel = Instance.new("TextLabel")
+CommanderLabel.Size = UDim2.new(1, -100, 0, 28)
+CommanderLabel.Position = UDim2.new(0, 18, 0, 40)
+CommanderLabel.BackgroundTransparency = 1
+CommanderLabel.Text = "COMMANDER: NONE"
+CommanderLabel.TextColor3 = Color3.fromRGB(190, 190, 195)
+CommanderLabel.TextSize = 14
+CommanderLabel.Font = Enum.Font.GothamBold
+CommanderLabel.TextXAlignment = Enum.TextXAlignment.Left
+CommanderLabel.Parent = TopBar
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 38, 0, 38)
+CloseButton.Position = UDim2.new(1, -50, 0, 12)
+CloseButton.BackgroundColor3 = Color3.fromRGB(35, 35, 38)
+CloseButton.BorderSizePixel = 0
+CloseButton.Text = "×"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 25
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = TopBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 8)
+CloseCorner.Parent = CloseButton
+
+local Content = Instance.new("Frame")
+Content.Size = UDim2.new(1, -24, 1, -96)
+Content.Position = UDim2.new(0, 12, 0, 88)
+Content.BackgroundTransparency = 1
+Content.Parent = Main
+
+local CommandPanel = Instance.new("Frame")
+CommandPanel.Size = UDim2.new(0.49, -6, 1, 0)
+CommandPanel.Position = UDim2.new(0, 0, 0, 0)
+CommandPanel.BackgroundColor3 = Color3.fromRGB(21, 21, 24)
+CommandPanel.BorderSizePixel = 0
+CommandPanel.Parent = Content
+
+local CommandCorner = Instance.new("UICorner")
+CommandCorner.CornerRadius = UDim.new(0, 9)
+CommandCorner.Parent = CommandPanel
+
+local CommandTitle = Instance.new("TextLabel")
+CommandTitle.Size = UDim2.new(1, -20, 0, 38)
+CommandTitle.Position = UDim2.new(0, 10, 0, 5)
+CommandTitle.BackgroundTransparency = 1
+CommandTitle.Text = "COMMANDS"
+CommandTitle.TextColor3 = Color3.fromRGB(235, 235, 240)
+CommandTitle.TextSize = 15
+CommandTitle.Font = Enum.Font.GothamBold
+CommandTitle.TextXAlignment = Enum.TextXAlignment.Left
+CommandTitle.Parent = CommandPanel
+
+local CommandList = Instance.new("ScrollingFrame")
+CommandList.Size = UDim2.new(1, -12, 1, -48)
+CommandList.Position = UDim2.new(0, 6, 0, 44)
+CommandList.BackgroundTransparency = 1
+CommandList.BorderSizePixel = 0
+CommandList.ScrollBarThickness = 4
+CommandList.CanvasSize = UDim2.new(0, 0, 0, 0)
+CommandList.Parent = CommandPanel
+
+local CommandLayout = Instance.new("UIListLayout")
+CommandLayout.Padding = UDim.new(0, 6)
+CommandLayout.SortOrder = Enum.SortOrder.LayoutOrder
+CommandLayout.Parent = CommandList
+
+local PlayerPanel = Instance.new("Frame")
+PlayerPanel.Size = UDim2.new(0.49, -6, 1, 0)
+PlayerPanel.Position = UDim2.new(0.51, 6, 0, 0)
+PlayerPanel.BackgroundColor3 = Color3.fromRGB(21, 21, 24)
+PlayerPanel.BorderSizePixel = 0
+PlayerPanel.Parent = Content
+
+local PlayerCorner = Instance.new("UICorner")
+PlayerCorner.CornerRadius = UDim.new(0, 9)
+PlayerCorner.Parent = PlayerPanel
+
+local PlayerTitle = Instance.new("TextLabel")
+PlayerTitle.Size = UDim2.new(1, -20, 0, 38)
+PlayerTitle.Position = UDim2.new(0, 10, 0, 5)
+PlayerTitle.BackgroundTransparency = 1
+PlayerTitle.Text = "PLAYERS"
+PlayerTitle.TextColor3 = Color3.fromRGB(235, 235, 240)
+PlayerTitle.TextSize = 15
+PlayerTitle.Font = Enum.Font.GothamBold
+PlayerTitle.TextXAlignment = Enum.TextXAlignment.Left
+PlayerTitle.Parent = PlayerPanel
+
+local PlayerList = Instance.new("ScrollingFrame")
+PlayerList.Size = UDim2.new(1, -12, 1, -48)
+PlayerList.Position = UDim2.new(0, 6, 0, 44)
+PlayerList.BackgroundTransparency = 1
+PlayerList.BorderSizePixel = 0
+PlayerList.ScrollBarThickness = 4
+PlayerList.CanvasSize = UDim2.new(0, 0, 0, 0)
+PlayerList.Parent = PlayerPanel
+
+local PlayerLayout = Instance.new("UIListLayout")
+PlayerLayout.Padding = UDim.new(0, 6)
+PlayerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+PlayerLayout.Parent = PlayerList
+
+local OpenCircle = Instance.new("TextButton")
+OpenCircle.Name = "OpenCircle"
+OpenCircle.Size = UDim2.new(0, 52, 0, 52)
+OpenCircle.Position = UDim2.new(0.5, -26, 0.5, -26)
+OpenCircle.BackgroundColor3 = Color3.fromRGB(25, 25, 28)
+OpenCircle.BorderSizePixel = 0
+OpenCircle.Text = "JZ"
+OpenCircle.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenCircle.TextSize = 15
+OpenCircle.Font = Enum.Font.GothamBlack
+OpenCircle.Visible = false
+OpenCircle.Active = true
+OpenCircle.Parent = ScreenGui
+
+local CircleCorner = Instance.new("UICorner")
+CircleCorner.CornerRadius = UDim.new(1, 0)
+CircleCorner.Parent = OpenCircle
+
+local CircleStroke = Instance.new("UIStroke")
+CircleStroke.Color = Color3.fromRGB(80, 80, 85)
+CircleStroke.Thickness = 1
+CircleStroke.Parent = OpenCircle
+
+MakeDraggable(OpenCircle, OpenCircle)
+
+CloseButton.MouseButton1Click:Connect(function()
+Main.Visible = false
+OpenCircle.Visible = true
+end)
+
+OpenCircle.MouseButton1Click:Connect(function()
+Main.Visible = true
+OpenCircle.Visible = false
+end)
+
+local Commands = {
+"!say <alt> <msg>",
+"!spin <alt> <value>",
+"!tp <alt> <player>",
+"!piggy <alt> <player>",
+"!troll <alt> <target>",
+"!trollstop <alt>",
+"!talk <alt> <player>",
+"!talkstop <alt>",
+"!reset <alt>",
+"!sit <alt> <player>",
+"!nosit <alt>",
+"!unnosit <alt>",
+"!headsit <alt> <player>",
+"!unheadsit <alt>",
+"!follow <alt> <player>",
+"!unfollow <alt>",
+"!orbit <alt> <player>",
+"!unorbit <alt>",
+"!looptp <alt> <player>",
+"!unlooptp <alt>",
+"!fling <alt> <player>",
+"!unfling <alt>",
+"!noclip <alt>",
+"!unnoclip <alt>",
+"!antinoclip <alt>",
+"!antiafk <alt>",
+"!unantiafk <alt>",
+"!antifling <alt>",
+"!unantifling <alt>",
+"!antivoid <alt>",
+"!unantivoid <alt>",
+"!unspin <alt>",
+"!spam <alt> <num> <word>",
+"!unspam <alt>",
+"!prime <alt> <target>",
+"!unprime <alt>",
+"!leave <alt>",
+"!exit <alt>",
+"!changeown <alt> <name>",
+"!shutdown",
+"!commands <alt>"
+}
+
+for _, CommandText in ipairs(Commands) do
+local Button = Instance.new("TextLabel")
+Button.Size = UDim2.new(1, -8, 0, 32)
+Button.BackgroundColor3 = Color3.fromRGB(29, 29, 33)
+Button.BorderSizePixel = 0
+Button.Text = CommandText
+Button.TextColor3 = Color3.fromRGB(210, 210, 215)
+Button.TextSize = 12
+Button.Font = Enum.Font.GothamMedium
+Button.TextXAlignment = Enum.TextXAlignment.Left
+Button.Parent = CommandList
+
+local Padding = Instance.new("UIPadding")
+Padding.PaddingLeft = UDim.new(0, 10)
+Padding.Parent = Button
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 6)
+Corner.Parent = Button
+end
+
+task.defer(function()
+CommandList.CanvasSize = UDim2.new(
+0,
+0,
+0,
+CommandLayout.AbsoluteContentSize.Y + 10
+)
+end)
+
+local function GetCharacter()
+return LocalPlayer.Character
+end
+
+local function GetHumanoid()
+local Character = GetCharacter()
+
+if not Character then
+return nil
+end
+
+return Character:FindFirstChildOfClass("Humanoid")
+end
+
+local function GetRoot()
+local Character = GetCharacter()
+
+if not Character then
+return nil
+end
+
+return Character:FindFirstChild("HumanoidRootPart")
+end
+
+local function FindPlayer(Name)
+if not Name or Name == "" then
+return nil
+end
+
+local Query = Name:lower()
+
+for _, Player in ipairs(Players:GetPlayers()) do
+if Player.Name:lower() == Query
+or Player.DisplayName:lower() == Query then
+return Player
+end
+end
+
+for _, Player in ipairs(Players:GetPlayers()) do
+if Player.Name:lower():sub(1, #Query) == Query
+or Player.DisplayName:lower():sub(1, #Query) == Query then
+return Player
+end
+end
+
+return nil
+end
+
+local function MatchesLocalSelector(Selector)
+if not Selector or Selector == "" then
+return false
+end
+
+Selector = Selector:lower()
+
+if Selector == "all" then
+return true
+end
+
+local Username = LocalPlayer.Name:lower()
+local DisplayName = LocalPlayer.DisplayName:lower()
+
+return Username:sub(1, #Selector) == Selector
+or DisplayName:sub(1, #Selector) == Selector
+end
+
+-- Brookhaven interaction-menu helpers used by !piggy.
+local GuiService = game:GetService("GuiService")
+
+local function ClickScreenPoint(Position)
+    local Input = game:GetService("VirtualInputManager")
+    local X, Y = math.floor(Position.X + 0.5), math.floor(Position.Y + 0.5)
+
+    -- Commander Control's own ScreenGui (especially its floating JZ button)
+    -- can sit above Brookhaven's interaction menu and steal the simulated click.
+    -- Temporarily disable only our GUI during the click, then restore its state.
+    local OwnGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+    OwnGui = OwnGui and OwnGui:FindFirstChild("CommanderControl")
+    local WasEnabled = OwnGui and OwnGui.Enabled
+    if OwnGui then OwnGui.Enabled = false end
+
+    local Success = pcall(function()
+        Input:SendMouseMoveEvent(X, Y, game)
+        task.wait(0.08)
+        Input:SendMouseButtonEvent(X, Y, 0, true, game, 0)
+        task.wait(0.08)
+        Input:SendMouseButtonEvent(X, Y, 0, false, game, 0)
+    end)
+
+    if OwnGui then OwnGui.Enabled = WasEnabled end
+    print(string.format("[PIGGY] Mouse click attempted at %d, %d (success=%s; Commander GUI restored=%s)", X, Y, tostring(Success), tostring(WasEnabled)))
+    return Success
+end
+
+local function FindPiggybackButton()
+    local PlayerGui = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+    if not PlayerGui then return nil end
+
+    -- Use the exact Brookhaven hierarchy reported by the user's diagnostic first.
+    local MainGui = PlayerGui:FindFirstChild("MainGUIHandler")
+    local Client2Client = MainGui and MainGui:FindFirstChild("Client2Client")
+    local WhiteCircle = Client2Client and Client2Client:FindFirstChild("WhiteCircle")
+    local MainOpen = WhiteCircle and WhiteCircle:FindFirstChild("MainOpen")
+    local WhiteCirclePic = MainOpen and MainOpen:FindFirstChild("WhiteCirclePic")
+    local Piggyback = WhiteCirclePic and WhiteCirclePic:FindFirstChild("Piggyback")
+
+    if Piggyback and Piggyback:IsA("GuiButton") then
+        return Piggyback
+    end
+
+    -- Fallback: locate a text label and walk upward to its real GuiButton.
+    for _, Object in ipairs(PlayerGui:GetDescendants()) do
+        if Object:IsA("TextLabel") then
+            local Text = (Object.Text or ""):lower():gsub("%s+", "")
+            if Text == "piggyback" then
+                local Parent = Object.Parent
+                while Parent and Parent ~= PlayerGui and not Parent:IsA("GuiButton") do
+                    Parent = Parent.Parent
+                end
+                if Parent and Parent:IsA("GuiButton") then
+                    return Parent
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
+local function ClickPiggybackOption()
+    local Button = FindPiggybackButton()
+    if not Button then
+        return false
+    end
+
+    -- Wait until Brookhaven has actually laid out and displayed the option.
+    if not Button.Visible or Button.AbsoluteSize.X <= 0 or Button.AbsoluteSize.Y <= 0 then
+        return false
+    end
+
+    local Center = Button.AbsolutePosition + (Button.AbsoluteSize / 2)
+
+    -- AbsolutePosition is in the ScreenGui coordinate space. Add the top-left
+    -- inset only when the containing ScreenGui does not ignore the GUI inset.
+    local ScreenGui = Button:FindFirstAncestorOfClass("ScreenGui")
+    if ScreenGui and not ScreenGui.IgnoreGuiInset then
+        local TopLeftInset = GuiService:GetGuiInset()
+        Center = Center + TopLeftInset
+    end
+
+    print(string.format(
+        "[PIGGY] Button=%s Pos=(%.1f, %.1f) Size=(%.1f, %.1f) Click=(%.1f, %.1f)",
+        Button:GetFullName(),
+        Button.AbsolutePosition.X,
+        Button.AbsolutePosition.Y,
+        Button.AbsoluteSize.X,
+        Button.AbsoluteSize.Y,
+        Center.X,
+        Center.Y
+    ))
+
+    -- Prefer a real input click at the freshly measured center. GuiButton:Activate()
+    -- can succeed without generating the same pointer event Brookhaven listens for.
+    return ClickScreenPoint(Center)
+end
+
+local function HasPiggybackJoint(Target)
+    local MyCharacter = LocalPlayer.Character
+    local TargetCharacter = Target and Target.Character
+    if not (MyCharacter and TargetCharacter) then
+        return false
+    end
+
+    local function ConnectsCharacters(Object, CharacterA, CharacterB)
+        if not (Object:IsA("Weld") or Object:IsA("WeldConstraint") or Object:IsA("Motor6D")) then
+            return false
+        end
+
+        local Part0, Part1 = Object.Part0, Object.Part1
+        return (Part0 and Part0:IsDescendantOf(CharacterA) and Part1 and Part1:IsDescendantOf(CharacterB))
+            or (Part1 and Part1:IsDescendantOf(CharacterA) and Part0 and Part0:IsDescendantOf(CharacterB))
+    end
+
+    for _, Object in ipairs(MyCharacter:GetDescendants()) do
+        if ConnectsCharacters(Object, MyCharacter, TargetCharacter) then
+            return true
+        end
+    end
+
+    for _, Object in ipairs(TargetCharacter:GetDescendants()) do
+        if ConnectsCharacters(Object, TargetCharacter, MyCharacter) then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function IsPiggybackAttached(Target)
+    -- Only confirm attachment when Brookhaven creates an actual connection
+    -- between the two characters. Do not infer acceptance from proximity:
+    -- the alt's approach position can put Jack above/nearby and cause a
+    -- false positive, which sends the alt home before Jack accepts.
+    if HasPiggybackJoint(Target) then
+        return true
+    end
+
+    local MyCharacter = LocalPlayer.Character
+    local TargetCharacter = Target and Target.Character
+    if not (MyCharacter and TargetCharacter) then
+        return false
+    end
+
+    -- Some carrying systems use constraints rather than Weld/Motor6D.
+    local ConstraintClasses = {
+        AlignPosition = true,
+        AlignOrientation = true,
+        BallSocketConstraint = true,
+        HingeConstraint = true,
+        RopeConstraint = true,
+        RodConstraint = true,
+        SpringConstraint = true,
+        CylindricalConstraint = true,
+        PrismaticConstraint = true,
+        UniversalConstraint = true,
+        WeldConstraint = true
+    }
+
+    local function ConnectsCharacters(Object)
+        if not ConstraintClasses[Object.ClassName] then
+            return false
+        end
+
+        -- Attachment-based constraints (BallSocket, AlignPosition, etc.) do not
+        -- expose Part0/Part1. Read only properties supported by that class.
+        if Object:IsA("Constraint") then
+            local Ok, A0, A1 = pcall(function()
+                return Object.Attachment0, Object.Attachment1
+            end)
+            if Ok and A0 and A1 then
+                local A0InMine = A0:IsDescendantOf(MyCharacter)
+                local A0InTarget = A0:IsDescendantOf(TargetCharacter)
+                local A1InMine = A1:IsDescendantOf(MyCharacter)
+                local A1InTarget = A1:IsDescendantOf(TargetCharacter)
+                if (A0InMine and A1InTarget) or (A0InTarget and A1InMine) then
+                    return true
+                end
+            end
+        end
+
+        -- Part-based joints such as WeldConstraint expose Part0/Part1.
+        if Object:IsA("JointInstance") or Object:IsA("WeldConstraint") then
+            local Ok, P0, P1 = pcall(function()
+                return Object.Part0, Object.Part1
+            end)
+            if Ok and P0 and P1 then
+                return (P0:IsDescendantOf(MyCharacter) and P1:IsDescendantOf(TargetCharacter))
+                    or (P1:IsDescendantOf(MyCharacter) and P0:IsDescendantOf(TargetCharacter))
+            end
+        end
+
+        return false
+    end
+
+    for _, Object in ipairs(MyCharacter:GetDescendants()) do
+        if ConnectsCharacters(Object) then
+            return true
+        end
+    end
+    for _, Object in ipairs(TargetCharacter:GetDescendants()) do
+        if ConnectsCharacters(Object) then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function WaitForPiggybackAttached(Target, Timeout)
+    local Deadline = os.clock() + (Timeout or 30)
+
+    while os.clock() < Deadline do
+        if not Target or not Target.Parent then
+            return false
+        end
+
+        if IsPiggybackAttached(Target) then
+            print("[PIGGY] Attachment confirmed by a character joint/constraint.")
+            return true
+        end
+
+        task.wait(0.2)
+    end
+
+    return false
+end
+
+local function SendPiggybackRequest(Target)
+    local Character = Target and Target.Character
+    local Camera = workspace.CurrentCamera
+    if not (Character and Camera) then return false end
+
+    -- Aim at Jack's visible torso. WorldToScreenPoint returns screen coordinates
+    -- suitable for VirtualInputManager mouse events (ViewportPoint omits the GUI inset).
+    local HitParts = {
+        Character:FindFirstChild("UpperTorso"),
+        Character:FindFirstChild("Torso"),
+        Character:FindFirstChild("LowerTorso"),
+        Character:FindFirstChild("Head")
+    }
+
+    local ClickedCharacter = false
+    for _, HitPart in ipairs(HitParts) do
+        if HitPart and HitPart:IsA("BasePart") then
+            local ScreenPosition, OnScreen = Camera:WorldToScreenPoint(HitPart.Position)
+            if OnScreen and ScreenPosition.Z > 0 then
+                local Point = Vector2.new(ScreenPosition.X, ScreenPosition.Y)
+                if ClickScreenPoint(Point) then
+                    ClickedCharacter = true
+                    task.wait(0.25)
+                    break
+                end
+            end
+        end
+    end
+
+    if not ClickedCharacter then return false end
+
+    -- Wait for the interaction menu, then click the freshly measured Piggyback entry.
+    for _ = 1, 30 do
+        task.wait(0.1)
+        local Button = FindPiggybackButton()
+        if Button and Button.Visible and Button.AbsoluteSize.X > 0 and Button.AbsoluteSize.Y > 0 then
+            return ClickPiggybackOption()
+        end
+    end
+    warn("[PIGGY] Piggyback GUI button was not found or never became visible.")
+    return false
+end
+
+local function ClearPlayerList()
+for _, Child in ipairs(PlayerList:GetChildren()) do
+if Child:IsA("TextButton") then
+Child:Destroy()
+end
+end
+end
+
+local function UpdateCommanderLabel()
+if SelectedCommander
+and SelectedCommander.Parent == Players then
+
+CommanderLabel.Text =
+"COMMANDER: " .. SelectedCommander.DisplayName
+
+else
+
+SelectedCommander = nil
+CommanderLabel.Text = "COMMANDER: NONE"
+
+end
+end
+
+local UpdatePlayerList
+
+UpdatePlayerList = function()
+ClearPlayerList()
+
+for _, Player in ipairs(Players:GetPlayers()) do
+
+if Player ~= LocalPlayer then
+
+local Button = Instance.new("TextButton")
+Button.Size = UDim2.new(1, -8, 0, 44)
+Button.BorderSizePixel = 0
+Button.Text =
+Player.DisplayName .. "  @" .. Player.Name
+Button.TextSize = 12
+Button.Font = Enum.Font.GothamMedium
+Button.TextXAlignment = Enum.TextXAlignment.Left
+Button.TextColor3 =
+Color3.fromRGB(225, 225, 230)
+Button.Parent = PlayerList
+
+if Player == SelectedCommander then
+Button.BackgroundColor3 =
+Color3.fromRGB(80, 38, 38)
+else
+Button.BackgroundColor3 =
+Color3.fromRGB(29, 29, 33)
+end
+
+local Padding = Instance.new("UIPadding")
+Padding.PaddingLeft = UDim.new(0, 12)
+Padding.Parent = Button
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 7)
+Corner.Parent = Button
+
+Button.MouseButton1Click:Connect(function()
+SelectedCommander = Player
+UpdateCommanderLabel()
+UpdatePlayerList()
+end)
+
+end
+end
+
+task.defer(function()
+PlayerList.CanvasSize = UDim2.new(
+0,
+0,
+0,
+PlayerLayout.AbsoluteContentSize.Y + 10
+)
+end)
+
+UpdateCommanderLabel()
+end
+
+local function StartFollow(Target)
+if not Target then
+return
+end
+
+FollowTargets[Target] = true
+
+task.spawn(function()
+while FollowTargets[Target] do
+
+if not Target.Parent then
+FollowTargets[Target] = nil
+break
+end
+
+local Root = GetRoot()
+local Humanoid = GetHumanoid()
+local TargetCharacter = Target.Character
+
+local TargetRoot =
+TargetCharacter
+and TargetCharacter:FindFirstChild(
+"HumanoidRootPart"
+)
+
+if Root and Humanoid and TargetRoot then
+
+local Behind =
+TargetRoot.Position
+- TargetRoot.CFrame.LookVector
+* FOLLOW_DISTANCE
+
+Humanoid:MoveTo(Behind)
+
+end
+
+task.wait(FOLLOW_UPDATE)
+end
+end)
+end
+
+local function StopFollow(Target)
+FollowTargets[Target] = nil
+end
+
+local function StartOrbit(Target)
+if not Target then
+return
+end
+
+OrbitTargets[Target] = true
+
+task.spawn(function()
+
+local Angle = 0
+
+while OrbitTargets[Target] do
+
+if not Target.Parent then
+OrbitTargets[Target] = nil
+break
+end
+
+local Root = GetRoot()
+local TargetCharacter = Target.Character
+
+local TargetRoot =
+TargetCharacter
+and TargetCharacter:FindFirstChild(
+"HumanoidRootPart"
+)
+
+if Root and TargetRoot then
+
+Angle += 0.08
+
+local Offset = Vector3.new(
+math.cos(Angle) * 6,
+1,
+math.sin(Angle) * 6
+)
+
+Root.CFrame = CFrame.new(
+TargetRoot.Position + Offset,
+TargetRoot.Position
+)
+
+end
+
+task.wait()
+end
+end)
+end
+
+local function StopOrbit(Target)
+OrbitTargets[Target] = nil
+end
+
+local function StartLoopTP(Target)
+if not Target then
+return
+end
+
+LoopTPTargets[Target] = true
+
+task.spawn(function()
+
+while LoopTPTargets[Target] do
+
+if not Target.Parent then
+LoopTPTargets[Target] = nil
+break
+end
+
+local Root = GetRoot()
+local TargetCharacter = Target.Character
+
+local TargetRoot =
+TargetCharacter
+and TargetCharacter:FindFirstChild(
+"HumanoidRootPart"
+)
+
+if Root and TargetRoot then
+
+Root.CFrame =
+TargetRoot.CFrame *
+CFrame.new(0, 0, -3)
+
+end
+
+task.wait(0.1)
+end
+end)
+end
+
+local function StopLoopTP(Target)
+LoopTPTargets[Target] = nil
+end
+
+local function StartNoSit()
+
+NoSitEnabled = true
+
+if NoSitConnection then
+NoSitConnection:Disconnect()
+NoSitConnection = nil
+end
+
+local Humanoid = GetHumanoid()
+
+if Humanoid then
+
+Humanoid.Sit = false
+
+Humanoid:SetStateEnabled(
+Enum.HumanoidStateType.Seated,
+false
+)
+
+end
+
+NoSitConnection =
+RunService.Heartbeat:Connect(function()
+
+if not NoSitEnabled then
+return
+end
+
+local CurrentHumanoid = GetHumanoid()
+
+if CurrentHumanoid then
+
+if CurrentHumanoid.Sit then
+CurrentHumanoid.Sit = false
+end
+
+if CurrentHumanoid:GetState()
+== Enum.HumanoidStateType.Seated then
+
+CurrentHumanoid:ChangeState(
+Enum.HumanoidStateType.GettingUp
+)
+
+end
+end
+end)
+end
+
+local function StopNoSit()
+
+NoSitEnabled = false
+
+if NoSitConnection then
+NoSitConnection:Disconnect()
+NoSitConnection = nil
+end
+
+local Humanoid = GetHumanoid()
+
+if Humanoid then
+
+Humanoid:SetStateEnabled(
+Enum.HumanoidStateType.Seated,
+true
+)
+
+Humanoid.Sit = false
+
+end
+end
+
+local function StartHeadSit(Target)
+
+if not Target then
+return
+end
+
+HeadSitTargets[Target] = true
+
+local function Setup()
+
+if not HeadSitTargets[Target] then
+return
+end
+
+local Character = GetCharacter()
+local Humanoid = GetHumanoid()
+local Root = GetRoot()
+local TargetCharacter = Target.Character
+
+if not Character
+or not Humanoid
+or not Root
+or not TargetCharacter then
+return
+end
+
+local TargetHead =
+TargetCharacter:FindFirstChild("Head")
+
+if not TargetHead then
+return
+end
+
+local ExistingAttachment =
+Root:FindFirstChild(
+"CommanderHeadSitAttachment"
+)
+
+if ExistingAttachment then
+ExistingAttachment:Destroy()
+end
+
+local ExistingPosition =
+Root:FindFirstChild(
+"CommanderHeadSitPosition"
+)
+
+if ExistingPosition then
+ExistingPosition:Destroy()
+end
+
+local ExistingOrientation =
+Root:FindFirstChild(
+"CommanderHeadSitOrientation"
+)
+
+if ExistingOrientation then
+ExistingOrientation:Destroy()
+end
+
+local RootAttachment = Instance.new("Attachment")
+RootAttachment.Name =
+"CommanderHeadSitAttachment"
+RootAttachment.Parent = Root
+
+local TargetAttachment =
+TargetHead:FindFirstChild(
+"CommanderHeadSitTarget"
+)
+
+if not TargetAttachment then
+
+TargetAttachment = Instance.new("Attachment")
+
+TargetAttachment.Name =
+"CommanderHeadSitTarget"
+
+TargetAttachment.Position =
+Vector3.new(0, 1.25, 0)
+
+TargetAttachment.Parent = TargetHead
+
+end
+
+local AlignPosition =
+Instance.new("AlignPosition")
+
+AlignPosition.Name =
+"CommanderHeadSitPosition"
+
+AlignPosition.Attachment0 =
+RootAttachment
+
+AlignPosition.Attachment1 =
+TargetAttachment
+
+AlignPosition.MaxForce = 1000000
+AlignPosition.MaxVelocity = math.huge
+AlignPosition.Responsiveness = 100
+AlignPosition.RigidityEnabled = false
+AlignPosition.Parent = Root
+
+local AlignOrientation =
+Instance.new("AlignOrientation")
+
+AlignOrientation.Name =
+"CommanderHeadSitOrientation"
+
+AlignOrientation.Attachment0 =
+RootAttachment
+
+AlignOrientation.Attachment1 =
+TargetAttachment
+
+AlignOrientation.MaxTorque = 1000000
+AlignOrientation.Responsiveness = 100
+AlignOrientation.RigidityEnabled = false
+AlignOrientation.Parent = Root
+
+Humanoid.Sit = true
+Humanoid.AutoRotate = false
+
+end
+
+Setup()
+
+task.spawn(function()
+
+while HeadSitTargets[Target] do
+
+if not Target.Parent then
+HeadSitTargets[Target] = nil
+break
+end
+
+local Root = GetRoot()
+local Humanoid = GetHumanoid()
+
+if Root and Humanoid then
+
+Humanoid.Sit = true
+Humanoid.AutoRotate = false
+
+Root.AssemblyLinearVelocity =
+Vector3.zero
+
+Root.AssemblyAngularVelocity =
+Vector3.zero
+
+end
+
+task.wait(0.2)
+end
+end)
+end
+
+local function StopHeadSit(Target)
+
+HeadSitTargets[Target] = nil
+
+local Root = GetRoot()
+local Humanoid = GetHumanoid()
+
+if Root then
+
+local A =
+Root:FindFirstChild(
+"CommanderHeadSitAttachment"
+)
+
+local P =
+Root:FindFirstChild(
+"CommanderHeadSitPosition"
+)
+
+local O =
+Root:FindFirstChild(
+"CommanderHeadSitOrientation"
+)
+
+if A then
+A:Destroy()
+end
+
+if P then
+P:Destroy()
+end
+
+if O then
+O:Destroy()
+end
+
+end
+
+if Humanoid then
+Humanoid.Sit = false
+Humanoid.AutoRotate = true
+end
+end
+
+local function StartFling(Target)
+
+if not Target
+or Target == LocalPlayer then
+return
+end
+
+FlingTargets[Target] = true
+
+task.spawn(function()
+
+while FlingTargets[Target] do
+
+if not Target.Parent then
+FlingTargets[Target] = nil
+break
+end
+
+local Character = Target.Character
+
+local Root =
+Character
+and Character:FindFirstChild(
+"HumanoidRootPart"
+)
+
+if Root then
+
+local Direction =
+Vector3.new(
+math.random(-100, 100),
+100,
+math.random(-100, 100)
+)
+
+if Direction.Magnitude > 0 then
+Direction = Direction.Unit
+end
+
+Root.AssemblyLinearVelocity =
+Direction * FLING_POWER
+
+Root.AssemblyAngularVelocity =
+Vector3.new(
+math.random(-50, 50),
+math.random(-50, 50),
+math.random(-50, 50)
+)
+
+end
+
+task.wait(0.12)
+end
+end)
+end
+
+local function StopFling(Target)
+
+FlingTargets[Target] = nil
+
+if Target
+and Target.Character then
+
+local Root =
+Target.Character:FindFirstChild(
+"HumanoidRootPart"
+)
+
+if Root then
+Root.AssemblyAngularVelocity =
+Vector3.zero
+end
+
+end
+end
+
+local function StopAllFling()
+
+for Target in pairs(FlingTargets) do
+StopFling(Target)
+end
+
+end
+
+local function StartNoclip()
+
+NoclipEnabled = true
+
+if NoclipConnection then
+NoclipConnection:Disconnect()
+end
+
+NoclipConnection =
+RunService.Stepped:Connect(function()
+
+if not NoclipEnabled then
+return
+end
+
+local Character = GetCharacter()
+
+if Character then
+
+for _, Part in ipairs(
+Character:GetDescendants()
+) do
+
+if Part:IsA("BasePart") then
+Part.CanCollide = false
+end
+
+end
+
+end
+end)
+end
+
+local function StopNoclip()
+
+NoclipEnabled = false
+
+if NoclipConnection then
+NoclipConnection:Disconnect()
+NoclipConnection = nil
+end
+
+local Character = GetCharacter()
+
+if Character then
+
+for _, Part in ipairs(
+Character:GetDescendants()
+) do
+
+if Part:IsA("BasePart") then
+Part.CanCollide = true
+end
+
+end
+
+end
+end
+
+local function StartAntiAFK()
+
+AntiAFKEnabled = true
+
+if AntiAFKConnection then
+AntiAFKConnection:Disconnect()
+end
+
+AntiAFKConnection =
+LocalPlayer.Idled:Connect(function()
+
+if AntiAFKEnabled then
+
+pcall(function()
+
+VirtualUser:CaptureController()
+
+VirtualUser:ClickButton2(
+Vector2.new(0, 0)
+)
+
+end)
+
+end
+end)
+end
+
+local function StopAntiAFK()
+
+AntiAFKEnabled = false
+
+if AntiAFKConnection then
+AntiAFKConnection:Disconnect()
+AntiAFKConnection = nil
+end
+
+end
+
+local function StartAntiFling()
+
+AntiFlingEnabled = true
+
+if AntiFlingConnection then
+AntiFlingConnection:Disconnect()
+AntiFlingConnection = nil
+end
+
+AntiFlingConnection =
+RunService.Heartbeat:Connect(function()
+
+if not AntiFlingEnabled then
+return
+end
+
+local Character = GetCharacter()
+local Root = GetRoot()
+
+if not Character or not Root then
+return
+end
+
+local Velocity =
+Root.AssemblyLinearVelocity
+
+if Velocity.Magnitude > 35 then
+Root.AssemblyLinearVelocity =
+Vector3.zero
+end
+
+local Angular =
+Root.AssemblyAngularVelocity
+
+if Angular.Magnitude > 8 then
+Root.AssemblyAngularVelocity =
+Vector3.zero
+end
+
+end)
+end
+
+local function StopAntiFling()
+
+AntiFlingEnabled = false
+
+if AntiFlingConnection then
+AntiFlingConnection:Disconnect()
+AntiFlingConnection = nil
+end
+
+end
+
+local function StartAntiVoid()
+
+AntiVoidEnabled = true
+
+if AntiVoidConnection then
+AntiVoidConnection:Disconnect()
+end
+
+AntiVoidConnection =
+RunService.Heartbeat:Connect(function()
+
+if not AntiVoidEnabled then
+return
+end
+
+local Root = GetRoot()
+
+if Root and Root.Position.Y < -100 then
+
+Root.CFrame =
+CFrame.new(0, 50, 0)
+
+Root.AssemblyLinearVelocity =
+Vector3.zero
+
+end
+
+end)
+end
+
+local function StopAntiVoid()
+
+AntiVoidEnabled = false
+
+if AntiVoidConnection then
+AntiVoidConnection:Disconnect()
+AntiVoidConnection = nil
+end
+
+end
+
+local function StartSpin(Speed)
+
+Speed = tonumber(Speed) or 10
+
+SpinSpeed = Speed
+SpinEnabled = true
+
+if SpinConnection then
+SpinConnection:Disconnect()
+end
+
+SpinConnection =
+RunService.RenderStepped:Connect(function()
+
+if not SpinEnabled then
+return
+end
+
+local Root = GetRoot()
+
+if Root then
+
+Root.CFrame =
+Root.CFrame *
+CFrame.Angles(
+0,
+math.rad(SpinSpeed),
+0
+)
+
+end
+
+end)
+end
+
+local function StopSpin()
+
+SpinEnabled = false
+
+if SpinConnection then
+SpinConnection:Disconnect()
+SpinConnection = nil
+end
+
+end
+
+local function SendChat(Message)
+
+local Channels =
+TextChatService:FindFirstChild(
+"TextChannels"
+)
+
+if not Channels then
+return false
+end
+
+local General =
+Channels:FindFirstChild(
+"RBXGeneral"
+)
+
+if not General then
+return false
+end
+
+local Success = pcall(function()
+General:SendAsync(Message)
+end)
+
+return Success
+end
+
+
+
+-- Commander AI chat settings.
+-- Paste the same COMMANDER_TOKEN value configured in your Cloudflare Worker.
+local COMMANDER_AI_URL = "https://commander-ai.sy931187.workers.dev/"
+local COMMANDER_TOKEN = "PASTE_YOUR_COMMANDER_TOKEN_HERE"
+
+local TalkTarget = nil
+local TalkRunning = false
+local TalkToken = 0
+local TalkLastReplyAt = 0
+local TalkHistory = {}
+
+local function StopTalk()
+    TalkToken += 1
+    TalkRunning = false
+    TalkTarget = nil
+    table.clear(TalkHistory)
+    print("[TALK] AI conversation stopped.")
+end
+
+local function StartTalk(Target)
+    if not Target or Target == LocalPlayer then
+        warn("[TALK] Invalid target.")
+        return
+    end
+    if COMMANDER_TOKEN == "" or COMMANDER_TOKEN == "PASTE_YOUR_COMMANDER_TOKEN_HERE" then
+        warn("[TALK] Add your Cloudflare COMMANDER_TOKEN in the AI settings.")
+        return
+    end
+    TalkToken += 1
+    TalkTarget = Target
+    TalkRunning = true
+    TalkLastReplyAt = 0
+    table.clear(TalkHistory)
+    print("[TALK] Listening for !q messages from " .. Target.Name .. ".")
+end
+
+local function GetRequestFunction()
+    if type(request) == "function" then
+        return request
+    elseif type(http_request) == "function" then
+        return http_request
+    elseif type(syn) == "table" and type(syn.request) == "function" then
+        return syn.request
+    end
+    return nil
+end
+
+local function HandleTalkMessage(Sender, RawText)
+    if not TalkRunning or not TalkTarget or Sender ~= TalkTarget then return end
+    if type(RawText) ~= "string" then return end
+
+    local Question = RawText:match("^%s*!q%s+(.+)$")
+    if not Question then return end
+    Question = Question:sub(1, 500)
+
+    if os.clock() - TalkLastReplyAt < 3 then return end
+    TalkLastReplyAt = os.clock()
+
+    local MyToken = TalkToken
+    task.spawn(function()
+        local RequestFunction = GetRequestFunction()
+        if not RequestFunction then
+            warn("[TALK] Delta does not expose a supported HTTP request function.")
+            return
+        end
+
+        local Payload = {
+            target = Sender.DisplayName ~= "" and Sender.DisplayName or Sender.Name,
+            message = Question,
+            history = TalkHistory
+        }
+
+        local Ok, Response = pcall(function()
+            return RequestFunction({
+                Url = COMMANDER_AI_URL,
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["Authorization"] = "Bearer " .. COMMANDER_TOKEN
+                },
+                Body = HttpService:JSONEncode(Payload)
+            })
+        end)
+
+        if MyToken ~= TalkToken or not TalkRunning then return end
+        if not Ok or type(Response) ~= "table" then
+            warn("[TALK] HTTP request failed: " .. tostring(Response))
+            return
+        end
+
+        local StatusCode = tonumber(Response.StatusCode or Response.Status or 0)
+        if StatusCode < 200 or StatusCode >= 300 then
+            warn("[TALK] Worker returned HTTP " .. tostring(StatusCode) .. ". Check token/deployment.")
+            return
+        end
+
+        local Body = Response.Body or Response.body
+        if type(Body) ~= "string" then
+            warn("[TALK] Worker returned an invalid response body.")
+            return
+        end
+
+        local DecodedOk, Data = pcall(function()
+            return HttpService:JSONDecode(Body)
+        end)
+        if not DecodedOk or type(Data) ~= "table" or type(Data.reply) ~= "string" then
+            warn("[TALK] Could not read the AI reply from the Worker.")
+            return
+        end
+
+        local Reply = Data.reply:gsub("%s+", " "):sub(1, 150)
+        if Reply == "" then return end
+
+        table.insert(TalkHistory, { role = "user", text = Question })
+        table.insert(TalkHistory, { role = "model", text = Reply })
+        while #TalkHistory > 8 do table.remove(TalkHistory, 1) end
+
+        if MyToken == TalkToken and TalkRunning and not SendChat(Reply) then
+            warn("[TALK] Roblox chat send failed.")
+        end
+    end)
+end
+
+local function StartSpam(Amount, Word)
+
+Amount = tonumber(Amount)
+
+if not Amount or Amount < 1 then
+return
+end
+
+Amount =
+math.clamp(
+math.floor(Amount),
+1,
+100
+)
+
+SpamToken += 1
+
+local MyToken = SpamToken
+
+SpamRunning = true
+
+task.spawn(function()
+
+for i = 1, Amount do
+
+if MyToken ~= SpamToken then
+break
+end
+
+SendChat(Word)
+
+if i < Amount then
+task.wait(0.8)
+end
+
+end
+
+if MyToken == SpamToken then
+SpamRunning = false
+end
+
+end)
+end
+
+local function StopSpam()
+
+SpamToken += 1
+SpamRunning = false
+
+end
+
+local function ShuffleTable(Table)
+
+local NewTable = {}
+
+for i, Value in ipairs(Table) do
+NewTable[i] = Value
+end
+
+for i = #NewTable, 2, -1 do
+
+local J = math.random(1, i)
+
+NewTable[i], NewTable[J] =
+NewTable[J], NewTable[i]
+
+end
+
+return NewTable
+end
+
+local function StartPrime(Target)
+
+if not Target or Target == "" then
+return
+end
+
+PrimeToken += 1
+
+local MyToken = PrimeToken
+
+PrimeRunning = true
+
+task.spawn(function()
+
+while MyToken == PrimeToken do
+
+local Messages =
+ShuffleTable(PrimeMessages)
+
+for _, Template in ipairs(Messages) do
+
+if MyToken ~= PrimeToken then
+PrimeRunning = false
+return
+end
+
+local Message =
+Template:gsub(
+"TARGET",
+function()
+return Target
+end
+)
+
+SendChat(Message)
+
+task.wait(PRIME_INTERVAL)
+
+end
+
+end
+
+PrimeRunning = false
+
+end)
+end
+
+local function StopPrime()
+
+PrimeToken += 1
+PrimeRunning = false
+
+end
+
+local function IsPrimaryOwner(Player)
+
+if not Player then
+return false
+end
+
+local Query = PRIMARY_OWNER:lower()
+
+return Player.Name:lower() == Query
+or Player.DisplayName:lower() == Query
+
+end
+
+local function IsCurrentOwner(Player)
+
+if not Player then
+return false
+end
+
+local Query = CurrentOwner:lower()
+
+return Player.Name:lower() == Query
+or Player.DisplayName:lower() == Query
+
+end
+
+local function FindOwnerTarget(Name)
+
+if not Name or Name == "" then
+return nil
+end
+
+local Query = Name:lower()
+
+for _, Player in ipairs(Players:GetPlayers()) do
+
+if Player.Name:lower() == Query then
+return Player
+end
+
+end
+
+for _, Player in ipairs(Players:GetPlayers()) do
+
+if Player.DisplayName:lower() == Query then
+return Player
+end
+
+end
+
+for _, Player in ipairs(Players:GetPlayers()) do
+
+if Player.Name:lower():sub(1, #Query) == Query then
+return Player
+end
+
+end
+
+for _, Player in ipairs(Players:GetPlayers()) do
+
+if Player.DisplayName:lower():sub(1, #Query) == Query then
+return Player
+end
+
+end
+
+return nil
+end
+
+local function ChangeOwner(TargetName)
+
+local Target = FindOwnerTarget(TargetName)
+
+if not Target then
+warn("[JZ] Owner target not found:", TargetName)
+return false
+end
+
+CurrentOwner = Target.Name
+
+print("[JZ] OWNER CHANGED TO:", Target.Name)
+
+return true
+end
+
+local function ShutdownAndRejoin()
+
+task.spawn(function()
+
+task.wait(0.15)
+
+pcall(function()
+TeleportService:Teleport(game.PlaceId, LocalPlayer)
+end)
+
+end)
+end
+
+local function ProcessCommand(Message, CommandSender)
+
+local Parts =
+string.split(Message, " ")
+
+if #Parts == 0 then
+return
+end
+
+local Command =
+Parts[1]:lower()
+
+if Command == "!talk" then
+    if not (IsPrimaryOwner(CommandSender) or IsCurrentOwner(CommandSender)) then return end
+    local Alt = Parts[2]
+    local TargetName = Parts[3]
+    if not MatchesLocalSelector(Alt) or not TargetName then return end
+
+    local Target = FindPlayer(TargetName)
+    if not Target or Target == LocalPlayer then
+        warn("[TALK] Target not found or invalid.")
+        return
+    end
+    StartTalk(Target)
+    return
+
+elseif Command == "!talkstop" then
+    if not (IsPrimaryOwner(CommandSender) or IsCurrentOwner(CommandSender)) then return end
+    if MatchesLocalSelector(Parts[2]) then StopTalk() end
+    return
+
+elseif Command == "!changeown" then
+
+if not IsPrimaryOwner(CommandSender) then
+return
+end
+
+local Alt = Parts[2]
+local TargetName = Parts[3]
+
+if not Alt or not TargetName then
+return
+end
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+ChangeOwner(TargetName)
+
+return
+
+elseif Command == "!shutdown" then
+
+if IsPrimaryOwner(CommandSender)
+or IsCurrentOwner(CommandSender) then
+
+ShutdownAndRejoin()
+
+end
+
+return
+end
+
+if not SelectedCommander
+and not IsCurrentOwner(CommandSender)
+and not IsPrimaryOwner(CommandSender) then
+return
+end
+
+if Command == "!trollstop" then
+    if not (IsPrimaryOwner(CommandSender) or IsCurrentOwner(CommandSender)) then return end
+    local Alt = Parts[2]
+    if not MatchesLocalSelector(Alt) then return end
+    TrollToken += 1
+    TrollRunning = false
+    print("[TROLL] Message loop stopped by " .. CommandSender.Name .. ".")
+    return
+end
+
+if Command == "!troll" then
+    if not (IsPrimaryOwner(CommandSender) or IsCurrentOwner(CommandSender)) then return end
+    local Alt = Parts[2]
+    local TargetName = Parts[3]
+    if not MatchesLocalSelector(Alt) then return end
+    if not TargetName then return end
+    if TrollRunning then
+        warn("[TROLL] A troll message loop is already running. Use !trollstop (alt) first.")
+        return
+    end
+
+    local Target = FindPlayer(TargetName)
+    if not Target or Target == LocalPlayer then
+        warn("[TROLL] Target not found or invalid.")
+        return
+    end
+
+    local TrollMessages = {
+        "{name}, even your mistakes are disappointed in you.",
+        "{name}, your mirror needs a day off.",
+        "{name}, even autocorrect gives up on you.",
+        "{name}, your comeback needs a comeback.",
+        "{name}, your luck has blocked your number.",
+        "{name}, your last brain cell filed for retirement.",
+        "{name}, even your shadow is distancing itself.",
+        "{name}, your future left you on read.",
+        "{name}, your reflection just sighed.",
+        "{name}, your plans have plans to avoid you.",
+        "{name}, even your excuses need better excuses.",
+        "{name}, your confidence is doing all the heavy lifting.",
+        "{name}, your brain's terms of service expired.",
+        "{name}, even your loading screen lost patience.",
+        "{name}, your talent is playing hide and seek.",
+        "{name}, your own echo changed the subject.",
+        "{name}, your common sense is uncommon for a reason.",
+        "{name}, your thoughts need a queue system.",
+        "{name}, even your backup plan needs a backup plan.",
+        "{name}, your brain is on a free trial.",
+        "{name}, your ideas arrive with apology letters.",
+        "{name}, even your mistakes are asking for supervision.",
+        "{name}, your logic took the scenic route and got lost.",
+        "{name}, your potential is still buffering.",
+        "{name}, your brain cells are on different servers.",
+        "{name}, even your reflection looked away.",
+        "{name}, your decision-making needs parental controls.",
+        "{name}, your thoughts have a low battery warning.",
+        "{name}, your strategy is just a surprise to yourself.",
+        "{name}, even your excuses don't believe you.",
+        "{name}, your brain sent an out-of-office reply.",
+        "{name}, your confidence has no supporting evidence.",
+        "{name}, your ideas need adult supervision.",
+        "{name}, even your keyboard is typing 'help'.",
+        "{name}, your brain's still accepting the terms.",
+        "{name}, your common sense is on airplane mode.",
+        "{name}, your plans got rejected by the calendar.",
+        "{name}, even your shadow asked for personal space.",
+        "{name}, your brain has too many tabs open.",
+        "{name}, your thoughts are stuck in the lobby.",
+        "{name}, even your mistakes are embarrassed.",
+        "{name}, your logic needs a software update.",
+        "{name}, your brain is running in safe mode.",
+        "{name}, your best idea was taking a break.",
+        "{name}, your aura has a pending payment.",
+        "{name}, your reflection asked for a transfer.",
+        "{name}, even your imaginary friends need space.",
+        "{name}, your brain's GPS keeps saying 'recalculating'.",
+        "{name}, your confidence is on unlimited data.",
+        "{name}, your talent called in sick. Again."
+    }
+
+    local SarcasticMessages = {
+        "{name}, what a breathtaking use of absolutely nothing.",
+        "{name}, that was almost a thought.",
+        "{name}, truly a landmark moment for confusion.",
+        "{name}, I can see the plan. It is hiding very well.",
+        "{name}, what a brave decision to ignore every good option.",
+        "{name}, the confidence is impressive; the evidence is missing.",
+        "{name}, you've made doing nothing look complicated.",
+        "{name}, that explanation raised more questions than answers.",
+        "{name}, a stunning achievement in missing the point.",
+        "{name}, I admire how committed you are to being surprised.",
+        "{name}, that was certainly one way to use a brain.",
+        "{name}, your strategy deserves its own documentary.",
+        "{name}, I'm sure that made sense somewhere.",
+        "{name}, a truly historic moment for questionable choices.",
+        "{name}, you make 'close enough' look ambitious.",
+        "{name}, what a delightful plot twist. Nobody saw the logic.",
+        "{name}, your performance has confused the experts.",
+        "{name}, that was so smooth the opposite of smooth.",
+        "{name}, I see the effort. It seems to be on vacation.",
+        "{name}, your reasoning deserves a round of puzzled applause.",
+        "{name}, a bold strategy. Let's see how it avoids working.",
+        "{name}, that idea really stood out. For the wrong reasons.",
+        "{name}, the results are in a different dimension.",
+        "{name}, you've redefined what 'unexpected' means.",
+        "{name}, an inspiring demonstration of guesswork.",
+        "{name}, I would be surprised, but you keep raising the bar downward.",
+        "{name}, your logic is a fascinating work of fiction.",
+        "{name}, that was a masterclass in almost getting it.",
+        "{name}, I appreciate the confidence-to-evidence ratio.",
+        "{name}, what a creative interpretation of reality.",
+        "{name}, that was impressively not the answer.",
+        "{name}, your plan has a charming lack of details.",
+        "{name}, a round of applause for that brave guess.",
+        "{name}, the effort was visible. The result was invisible.",
+        "{name}, that's one way to make a simple thing complicated.",
+        "{name}, truly an unforgettable example of what not to do.",
+        "{name}, I see you've chosen the scenic route to being wrong.",
+        "{name}, that was a very confident mistake.",
+        "{name}, your explanation deserves subtitles.",
+        "{name}, what a fascinating way to avoid success.",
+        "{name}, the bar was low and you brought a shovel.",
+        "{name}, I love how every answer creates three new problems.",
+        "{name}, that's the kind of thinking that keeps tutorials employed.",
+        "{name}, your timing is truly something to behold.",
+        "{name}, a flawless demonstration of almost anything else.",
+        "{name}, I expected a surprise and got exactly this.",
+        "{name}, what a rare talent for changing the subject.",
+        "{name}, that was a strong argument for taking a break.",
+        "{name}, your best feature is keeping expectations realistic.",
+        "{name}, absolutely iconic. In a cautionary tale."
+    }
+
+    local AllTrollMessages = {}
+    for _, MessageText in ipairs(TrollMessages) do table.insert(AllTrollMessages, MessageText) end
+    for _, MessageText in ipairs(SarcasticMessages) do table.insert(AllTrollMessages, MessageText) end
+
+    TrollToken += 1
+    local MyToken = TrollToken
+    TrollRunning = true
+    local TargetLabel = Target.DisplayName ~= "" and Target.DisplayName or Target.Name
+    print("[TROLL] Started message loop targeting " .. Target.Name .. ". Owner can stop with !trollstop (alt).")
+
+    task.spawn(function()
+        local Index = 1
+        while TrollRunning and TrollToken == MyToken and Target.Parent do
+            local MessageText = AllTrollMessages[Index]
+            if not MessageText then
+                Index = 1
+                MessageText = AllTrollMessages[Index]
+            end
+            local Outgoing = MessageText:gsub("{name}", TargetLabel)
+            local Sent = SendChat(Outgoing)
+            if not Sent then
+                warn("[TROLL] Chat send failed; stopping loop.")
+                break
+            end
+            Index += 1
+            if Index > #AllTrollMessages then Index = 1 end
+            task.wait(2.5)
+        end
+
+        if TrollToken == MyToken then
+            TrollRunning = false
+            print("[TROLL] Message loop ended.")
+        end
+    end)
+
+    return
+end
+
+if Command == "!commands" then
+
+local Alt = Parts[2]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+-- Send the command reference one line at a time to avoid one oversized chat message.
+local HelpMessages = {}
+for _, HelpCommand in ipairs(Commands) do
+    local HelpText = HelpCommand
+    HelpText = HelpText:gsub("<alt>", "(alt)")
+    HelpText = HelpText:gsub("<msg>", "(msg)")
+    HelpText = HelpText:gsub("<text>", "(msg)")
+    HelpText = HelpText:gsub("<value>", "(value)")
+    HelpText = HelpText:gsub("<speed>", "(value)")
+    HelpText = HelpText:gsub("<player>", "(player)")
+    HelpText = HelpText:gsub("<num>", "(num)")
+    HelpText = HelpText:gsub("<word>", "(word)")
+    HelpText = HelpText:gsub("<target>", "(target)")
+    HelpText = HelpText:gsub("<name>", "(name)")
+    table.insert(HelpMessages, HelpText)
+end
+
+task.spawn(function()
+    for _, HelpText in ipairs(HelpMessages) do
+        SendChat(HelpText)
+        task.wait(2)
+    end
+end)
+
+elseif Command == "!say" then
+
+local Alt = Parts[2]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+local Text =
+table.concat(
+Parts,
+" ",
+3
+)
+
+if Text ~= "" then
+SendChat(Text)
+end
+
+elseif Command == "!piggy" then
+
+    local Alt = Parts[2]
+    local TargetName = Parts[3]
+    if not MatchesLocalSelector(Alt) then return end
+
+    local Target = FindPlayer(TargetName)
+    if not Target or Target == LocalPlayer then return end
+
+    if PiggyRunning then
+        warn("[PIGGY] A Piggyback sequence is already running on this alt.")
+        return
+    end
+
+    local Root = GetRoot()
+    if not Root then return end
+
+    PiggyRunning = true
+    local OriginalCFrame = Root.CFrame
+
+    task.spawn(function()
+        local Accepted = false
+
+        local Success, ErrorMessage = pcall(function()
+            for Attempt = 1, 3 do
+                if not Target.Parent or not Target.Character then
+                    warn("[PIGGY] Target left or respawned; stopping.")
+                    break
+                end
+
+                local CurrentRoot = GetRoot()
+                local TargetRoot = Target.Character:FindFirstChild("HumanoidRootPart")
+                if not (CurrentRoot and TargetRoot) then
+                    warn("[PIGGY] Character root missing; stopping.")
+                    break
+                end
+
+                -- Reposition and face Jack for each fresh request attempt.
+                local ApproachPosition = (TargetRoot.CFrame * CFrame.new(0, 0, 3.5)).Position
+                CurrentRoot.CFrame = CFrame.lookAt(ApproachPosition, TargetRoot.Position)
+                task.wait(0.8)
+
+                print(string.format("[PIGGY] Sending request attempt %d/3 to %s.", Attempt, Target.Name))
+                local RequestClicked = SendPiggybackRequest(Target)
+
+                if not RequestClicked then
+                    warn("[PIGGY] Could not click the Piggyback option on attempt " .. Attempt .. ".")
+                    if Attempt < 3 then
+                        -- Remain at Jack's position; do not teleport home between retries.
+                        task.wait(3.0)
+                    end
+                else
+                    print("[PIGGY] Piggyback option clicked; waiting up to 10 seconds for Jack to accept.")
+                    -- Keep the alt beside Jack while he responds. Brookhaven's
+                    -- request/accept UI can take longer to appear when players
+                    -- are far apart or the client is under load.
+                    Accepted = WaitForPiggybackAttached(Target, 10)
+                    if Accepted then
+                        break
+                    end
+                    warn("[PIGGY] No attachment detected after attempt " .. Attempt .. ".")
+                    if Attempt < 3 then
+                        -- Do not return to the saved position between requests.
+                        -- Stay beside Jack while the next request is prepared.
+                        task.wait(3.0)
+                    end
+                end
+            end
+
+            local ReturnRoot = GetRoot()
+            if ReturnRoot then
+                ReturnRoot.CFrame = OriginalCFrame
+                if Accepted then
+                    print("[PIGGY] Returned to saved position with the target attached.")
+                else
+                    warn("[PIGGY] Three attempts finished without confirmed acceptance; returned alone.")
+                end
+            end
+        end)
+
+        PiggyRunning = false
+        if not Success then
+            warn("[PIGGY] Sequence error: " .. tostring(ErrorMessage))
+            local ReturnRoot = GetRoot()
+            if ReturnRoot then
+                ReturnRoot.CFrame = OriginalCFrame
+            end
+        end
+    end)
+
+    return
+
+elseif Command == "!tp" then
+
+local Alt = Parts[2]
+local TargetName = Parts[3]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+local Target =
+FindPlayer(TargetName)
+
+if Target then
+
+local Root = GetRoot()
+
+local TargetRoot =
+Target.Character
+and Target.Character:FindFirstChild(
+"HumanoidRootPart"
+)
+
+if Root and TargetRoot then
+Root.CFrame =
+TargetRoot.CFrame
+end
+
+end
+
+elseif Command == "!reset" then
+
+local Alt = Parts[2]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+local Humanoid =
+GetHumanoid()
+
+if Humanoid then
+Humanoid.Health = 0
+end
+
+elseif Command == "!sit" then
+
+local Alt = Parts[2]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+local Target =
+FindPlayer(Parts[3])
+
+if Target
+and Target.Character then
+
+local Root = GetRoot()
+
+local TargetRoot =
+Target.Character:FindFirstChild(
+"HumanoidRootPart"
+)
+
+if Root and TargetRoot then
+
+Root.CFrame =
+TargetRoot.CFrame *
+CFrame.new(0, 0, -2)
+
+local Humanoid =
+GetHumanoid()
+
+if Humanoid then
+Humanoid.Sit = true
+end
+
+end
+
+end
+
+elseif Command == "!nosit" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StartNoSit()
+end
+
+elseif Command == "!unnosit" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StopNoSit()
+end
+
+elseif Command == "!headsit" then
+
+local Alt = Parts[2]
+local TargetName = Parts[3]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+local Target =
+FindPlayer(TargetName)
+
+if Target then
+StartHeadSit(Target)
+end
+
+elseif Command == "!unheadsit" then
+
+local Alt = Parts[2]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+for Target in pairs(HeadSitTargets) do
+StopHeadSit(Target)
+end
+
+elseif Command == "!follow" then
+
+local Alt = Parts[2]
+local TargetName = Parts[3]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+local Target =
+FindPlayer(TargetName)
+
+if Target then
+StartFollow(Target)
+end
+
+elseif Command == "!unfollow" then
+
+local Alt = Parts[2]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+for Target in pairs(FollowTargets) do
+StopFollow(Target)
+end
+
+elseif Command == "!orbit" then
+
+local Alt = Parts[2]
+local TargetName = Parts[3]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+local Target =
+FindPlayer(TargetName)
+
+if Target then
+StartOrbit(Target)
+end
+
+elseif Command == "!unorbit" then
+
+local Alt = Parts[2]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+for Target in pairs(OrbitTargets) do
+StopOrbit(Target)
+end
+
+elseif Command == "!looptp" then
+
+local Alt = Parts[2]
+local TargetName = Parts[3]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+local Target =
+FindPlayer(TargetName)
+
+if Target then
+StartLoopTP(Target)
+end
+
+elseif Command == "!unlooptp" then
+
+local Alt = Parts[2]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+for Target in pairs(LoopTPTargets) do
+StopLoopTP(Target)
+end
+
+elseif Command == "!fling" then
+
+local Alt = Parts[2]
+local TargetName = Parts[3]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+local Target =
+FindPlayer(TargetName)
+
+if Target then
+StartFling(Target)
+end
+
+elseif Command == "!unfling" then
+
+local Alt = Parts[2]
+
+if not MatchesLocalSelector(Alt) then
+return
+end
+
+StopAllFling()
+
+elseif Command == "!noclip" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StartNoclip()
+end
+
+elseif Command == "!unnoclip"
+or Command == "!antinoclip" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StopNoclip()
+end
+
+elseif Command == "!antiafk" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StartAntiAFK()
+end
+
+elseif Command == "!unantiafk" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StopAntiAFK()
+end
+
+elseif Command == "!antifling" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StartAntiFling()
+end
+
+elseif Command == "!unantifling" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StopAntiFling()
+end
+
+elseif Command == "!antivoid" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StartAntiVoid()
+end
+
+elseif Command == "!unantivoid" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StopAntiVoid()
+end
+
+elseif Command == "!spin" then
+
+local Alt = Parts[2]
+local Speed = Parts[3]
+
+if MatchesLocalSelector(Alt) then
+StartSpin(Speed)
+end
+
+elseif Command == "!unspin" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StopSpin()
+end
+
+elseif Command == "!spam" then
+
+local Alt = Parts[2]
+local Amount = Parts[3]
+
+local Word =
+table.concat(
+Parts,
+" ",
+4
+)
+
+if MatchesLocalSelector(Alt)
+and Word ~= "" then
+
+StartSpam(
+Amount,
+Word
+)
+
+end
+
+elseif Command == "!unspam" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StopSpam()
+end
+
+elseif Command == "!prime" then
+
+local Alt = Parts[2]
+local TargetText = Parts[3]
+
+if MatchesLocalSelector(Alt)
+and TargetText then
+
+StartPrime(TargetText)
+
+end
+
+elseif Command == "!unprime" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+StopPrime()
+end
+
+elseif Command == "!leave"
+or Command == "!exit" then
+
+local Alt = Parts[2]
+
+if MatchesLocalSelector(Alt) then
+
+pcall(function()
+game:Shutdown()
+end)
+
+end
+
+end
+end
+
+local ConnectedChannels = {}
+
+local function ConnectChannel(Channel)
+
+if not Channel:IsA("TextChannel") then
+return
+end
+
+if ConnectedChannels[Channel] then
+return
+end
+
+ConnectedChannels[Channel] = true
+
+Channel.MessageReceived:Connect(
+function(Message)
+
+if not Message.TextSource then
+return
+end
+
+local SenderUserId =
+Message.TextSource.UserId
+
+local CommandSender =
+Players:GetPlayerByUserId(SenderUserId)
+
+if not CommandSender then
+return
+end
+
+-- Listen for !q from the selected talk target, independently of command permissions.
+HandleTalkMessage(CommandSender, Message.Text)
+
+local IsJack =
+IsPrimaryOwner(CommandSender)
+
+local IsCommander =
+SelectedCommander
+and SenderUserId == SelectedCommander.UserId
+
+local IsOwner =
+IsCurrentOwner(CommandSender)
+
+if not IsJack and not IsCommander and not IsOwner then
+return
+end
+
+ProcessCommand(
+Message.Text,
+CommandSender
+)
+
+end
+)
+end
+
+local function ConnectAllChannels()
+
+local Channels =
+TextChatService:FindFirstChild(
+"TextChannels"
+)
+
+if not Channels then
+return
+end
+
+for _, Channel in ipairs(
+Channels:GetChildren()
+) do
+
+ConnectChannel(Channel)
+
+end
+end
+
+local ChannelsFolder =
+TextChatService:FindFirstChild(
+"TextChannels"
+)
+
+if ChannelsFolder then
+
+ConnectAllChannels()
+
+ChannelsFolder.ChildAdded:Connect(
+function(Child)
+
+task.wait(0.1)
+
+ConnectChannel(Child)
+
+end
+)
+
+else
+
+TextChatService.ChildAdded:Connect(
+function(Child)
+
+if Child.Name == "TextChannels" then
+
+task.wait(0.1)
+
+ConnectAllChannels()
+
+Child.ChildAdded:Connect(
+function(Channel)
+
+task.wait(0.1)
+
+ConnectChannel(
+Channel
+)
+
+end
+)
+
+end
+end
+)
+
+end
+
+LocalPlayer.CharacterAdded:Connect(
+function()
+
+task.wait(1)
+
+if NoclipEnabled then
+StartNoclip()
+end
+
+if NoSitEnabled then
+StartNoSit()
+end
+
+if AntiFlingEnabled then
+StartAntiFling()
+end
+
+if AntiVoidEnabled then
+StartAntiVoid()
+end
+
+if SpinEnabled then
+StartSpin(SpinSpeed)
+end
+
+if AntiAFKEnabled then
+StartAntiAFK()
+end
+
+end
+)
+
+Players.PlayerAdded:Connect(
+function()
+
+task.wait(0.2)
+
+UpdatePlayerList()
+
+end
+)
+
+Players.PlayerRemoving:Connect(
+function(Player)
+
+if Player == SelectedCommander then
+SelectedCommander = nil
+end
+
+FollowTargets[Player] = nil
+OrbitTargets[Player] = nil
+LoopTPTargets[Player] = nil
+HeadSitTargets[Player] = nil
+FlingTargets[Player] = nil
+
+task.wait(0.1)
+
+UpdatePlayerList()
+
+end
+)
+
+UpdatePlayerList()
+
+print("======================================")
+print("COMMANDER CONTROL LOADED")
+print("MADE BY JackZort")
+print("RIGHT = PLAYER / COMMANDER")
+print("LEFT = COMMAND LIST")
+print("NO SIT = FIXED")
+print("FOLLOW = FASTER")
+print("ANTI FLING = IMPROVED")
+print("FLING = ADDED")
+print("PRIME = 1.5 SECOND INTERVAL")
+print("PRIMARY OWNER = " .. PRIMARY_OWNER)
+print("CURRENT OWNER = " .. CurrentOwner)
+print("NO PRIME LOOP PAUSE")
+print("======================================")
