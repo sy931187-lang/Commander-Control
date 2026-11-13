@@ -1557,7 +1557,7 @@ end
 -- Commander AI chat settings.
 -- Paste the same COMMANDER_TOKEN value configured in your Cloudflare Worker.
 local COMMANDER_AI_URL = "https://commander-ai.sy931187.workers.dev/"
-local COMMANDER_TOKEN = "TIKITIKITIKITIKIABCDEFG@10954"
+local COMMANDER_TOKEN = "PASTE_YOUR_COMMANDER_TOKEN_HERE"
 
 local TalkTarget = nil
 local TalkRunning = false
@@ -1608,6 +1608,9 @@ local function HandleTalkMessage(Sender, RawText)
     local Question = RawText:match("^%s*!q%s+(.+)$")
     if not Question then return end
     Question = Question:sub(1, 500)
+
+    -- Only send a Gemini request when the question ends with '?'.
+    if not Question:match("%?%s*$") then return end
 
     if os.clock() - TalkLastReplyAt < 3 then return end
     TalkLastReplyAt = os.clock()
