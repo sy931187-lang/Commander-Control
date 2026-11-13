@@ -1605,12 +1605,12 @@ local function HandleTalkMessage(Sender, RawText)
     if not TalkRunning or not TalkTarget or Sender ~= TalkTarget then return end
     if type(RawText) ~= "string" then return end
 
+    -- Every !q message is sent to Commander AI.
+    -- The Cloudflare Worker decides whether to use Google Search:
+    -- messages ending in ? use research; other messages use normal chat.
     local Question = RawText:match("^%s*!q%s+(.+)$")
     if not Question then return end
     Question = Question:sub(1, 500)
-
-    -- Only send a Gemini request when the question ends with '?'.
-    if not Question:match("%?%s*$") then return end
 
     if os.clock() - TalkLastReplyAt < 3 then return end
     TalkLastReplyAt = os.clock()
